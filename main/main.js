@@ -202,7 +202,7 @@ const createReceipt = (itemCartPromotion) => {
     for(let i = 0; i < itemCartPromotion.length; i++){
         receipt += `
  名称：${itemCartPromotion[i].name}，数量:${itemCartPromotion[i].count}${itemCartPromotion[i].unit}，
- 单价:${itemCartPromotion[i].price}（元），小计：${itemCartPromotion[i].sumPrice}（元）`;
+单价:${itemCartPromotion[i].price}（元），小计：${itemCartPromotion[i].sumPrice}（元）`;
         discount += (itemCartPromotion[i].count * itemCartPromotion[i].price - itemCartPromotion[i].sumPrice);
         sumMoney += itemCartPromotion[i].sumPrice;
     }
