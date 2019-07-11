@@ -62,81 +62,118 @@ let allItems = loadAllItems();
 //console.log(allItems);
 let promotions = loadPromotions();
 
+let shopList = [
+    'ITEM000001',
+    'ITEM000001',
+    'ITEM000001',
+    'ITEM000001',
+    'ITEM000001',
+    'ITEM000003-2',
+    'ITEM000005',
+    'ITEM000005',
+    'ITEM000005'
+  ];
+
 const getAllItemBarcode = () =>{
     let allItemBarcode = [];
-    for(let i = 0; i < allItems.length; i++){
+    /*for(let i = 0; i < allItems.length; i++){
         allItemBarcode.push(allItems[i].barcode);
-    }
+    }*/
+    allItems.forEach(element => {
+        allItemBarcode.push(element.barcode);
+    });
     return allItemBarcode;
 }
 
-const isValid = (allItemBarcode,shopList) => {
-    for(let i = 0; i < shopList.length; i++){
-        if(allItemBarcode.indexOf(shopList[i]) == -1)
+const getShopListChanged = (shopList) => {
+    let shopListChanged = [];
+    shopList.forEach(shopItem => {
+        if(shopItem.indexOf("-") != -1){
+            for(let i = 0; i < shopItem.split("-")[1]; i++){
+                shopListChanged.push(shopItem.split("-")[0]);
+            }
+            
+        }
+        else shopListChanged.push(shopItem);
+    });
+    return shopListChanged;
+}
+
+const isValid = (allItemBarcode,shopListChanged) => {
+    
+    for(let i = 0; i < shopListChanged.length; i++){
+        if(allItemBarcode.indexOf(shopListChanged[i]) == -1){
             console.log("false");
             return false;
+        }
     }
     console.log("true");
     return true;
 }
 
-const getShopListCount = (shopList) => {
+const getShopListCount = (shopListChanged) => {
     let shopListCount = [];
-    shopList.sort();
+    shopListChanged.sort();
     var temp = {};
-    for(let i = 0; i < shopList.length - 1; i++) {
+    for(let i = 0; i < shopListChanged.length - 1; i++) {
         if(i == 0){
-            temp.barcode = shopList[i];
+            temp.barcode = shopListChanged[i];
             temp.count = 1;
-            if(shopList[0] === shopList[1])
+            if(shopListChanged[0] === shopListChanged[1])
                 ++ temp.count;
             continue;
         }
-        if(shopList[i] === shopList[i+1]){
+        if(shopListChanged[i] === shopListChanged[i+1]){
             ++temp.count;
         }else{
             shopListCount.push(temp);
             temp = {};
-            temp.barcode = shopList[i+1];
+            temp.barcode = shopListChanged[i+1];
             temp.count = 1;
         }
     }
     if(temp.length != 0)
         shopListCount.push(temp);
+    console.log(shopListCount);
     return shopListCount;
 }
 
-const getItemCart = (shopListCount) => {
+const getItemCart = (shopListCount,shopListChanged) => {
     let itemCart = [];
     
     for(let i = 0; i < shopListCount.length; i++){
         let item = {};
         for(let j = 0; j < allItems.length; j++){
-            if(shopListCount[i] == allItems[j].barcode){
-                item.barcode = shopList[i];
+            if(shopListCount[i].barcode == allItems[j].barcode){
+                item.barcode = shopListCount[i].barcode;
                 item.name = allItems[j].name;
                 item.unit = allItems[j].unit;
                 item.price = allItems[j].price;
-                item.count = shopListCount[i];
-                item.sumPrice = shopListCount[i] * allItems[j].price;
+                item.count = shopListCount[i].count;
+                item.sumPrice = shopListCount[i].count * allItems[j].price;
                 /*item.barcode = shopList[i];
                 item.名称 = allItems[j].name;
                 item.数量 = 1;
                 item.名称 = allItems[j].name;*/
+                
             }
         }
         itemCart.push(item);
+        item = {};
     }
+    console.log("itemCart");
+    console.log(itemCart);
     return itemCart;
 }
 
 const getItemCartPromotion = (itemCart) => {
-    let itemCartPromotion = [];
+    
     if(promotions.length == 0){
         return itemCart;
     }
+    let itemCartPromotion = [];
     let promotionbarcodes = promotions[0].barcodes;
-    var item = {}
+    var item = {};
     for(let i = 0; i < itemCart.length; i++){
         item.barcode = itemCart[i].barcode;
         item.name = itemCart[i].name;
@@ -146,11 +183,14 @@ const getItemCartPromotion = (itemCart) => {
         item.sumPrice = itemCart[i].sumPrice;
         if(promotionbarcodes.indexOf(itemCart[i].barcode) != -1 ){
             if(item.count >= 2){
-                item.sumPrice -= item.price
+                item.sumPrice -= item.price;
             }
         }
         itemCartPromotion.push(item);
+        item = {};
     }
+    console.log("itemCartPromotion");
+    console.log(itemCartPromotion);
     return itemCartPromotion;
 }
 //console.log(getAllItemBarcode(allItems));
@@ -160,8 +200,9 @@ const createReceipt = (itemCartPromotion) => {
     let discount = 0;
     let sumMoney = 0;
     for(let i = 0; i < itemCartPromotion.length; i++){
-        receipt += `名称：${itemCartPromotion[i].name}，数量:${itemCartPromotion[i].count}${itemCartPromotion[i].unit}，
-        单价:${itemCartPromotion[i].price}（元），小计：${itemCartPromotion[i].sumPrice}（元）`;
+        receipt += `
+ 名称：${itemCartPromotion[i].name}，数量:${itemCartPromotion[i].count}${itemCartPromotion[i].unit}，
+ 单价:${itemCartPromotion[i].price}（元），小计：${itemCartPromotion[i].sumPrice}（元）`;
         discount += (itemCartPromotion[i].count * itemCartPromotion[i].price - itemCartPromotion[i].sumPrice);
         sumMoney += itemCartPromotion[i].sumPrice;
     }
@@ -176,14 +217,16 @@ const createReceipt = (itemCartPromotion) => {
 
 const printReceipt = (shopList) =>{
     let allItemBarcode = getAllItemBarcode();
-    if(!isValid(allItemBarcode))
+    let shopListChanged = getShopListChanged(shopList);
+    if(!isValid(allItemBarcode,shopListChanged))
         return "[ERROR]:no this barcode";
-    let shopListCount = getShopListCount(shopList);
-    let itemCart = getItemCart(shopListCount);
+    let shopListCount = getShopListCount(shopListChanged);
+    let itemCart = getItemCart(shopListCount,shopListChanged);
     let itemCartPromotion = getItemCartPromotion(itemCart);
     let receipt = createReceipt(itemCartPromotion);
     console.log(receipt);
     return createReceipt;
 }
 
-module.exports = {getAllItemBarcode};
+//module.exports = {getAllItemBarcode};
+console.log(printReceipt(shopList));

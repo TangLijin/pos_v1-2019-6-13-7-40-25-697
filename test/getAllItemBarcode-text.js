@@ -22,4 +22,5 @@ describe('getAllItemBarcode', () => {
 	    expect(getAllItemBarcode(allItems)).toBe(expectIdList);
 });
 
+
 });

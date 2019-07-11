@@ -1,5 +1,6 @@
 'use strict';
 
+
 describe('pos', () => {
 
   it('should print text', () => {
@@ -31,3 +32,4 @@ describe('pos', () => {
     expect(console.log).toHaveBeenCalledWith(expectText);
   });
 });
+
